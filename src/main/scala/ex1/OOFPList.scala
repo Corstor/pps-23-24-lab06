@@ -45,20 +45,16 @@ enum List[A]:
     case h :: t => t.foldLeft(h)(op)
 
   // Exercise: implement the following methods
-  def zipWithValue[B](value: B): List[(A, B)] = this match
-    case h :: t => (h, value) :: t.zipWithValue(value)
-    case _ => Nil()
-  
+  def zipWithValue[B](value: B): List[(A, B)] = map(a => (a, value))
   
   def length(): Int = foldLeft(0)((n, _) => n + 1)
 
-  def zipWithIndex: List[(A, Int)] =
-    val lastIndex = this.length() - 1
-    foldRight(Nil())((a, b) => (a, lastIndex - b.length()) :: b)
+  def zipWithIndex: List[(A, Int)] = foldRight((Nil[(A, Int)](), this.length() - 1)) ((a, b) => ((a, b._2) :: b._1, b._2 - 1))._1
 
-  def partition(predicate: A => Boolean): (List[A], List[A]) = ???
+  def partition(predicate: A => Boolean): (List[A], List[A]) = foldRight((Nil(), Nil()))((a, list) => if predicate(a) then (a :: list._1, list._2) else (list._1, a :: list._2))
 
   def span(predicate: A => Boolean): (List[A], List[A]) = ???
+
   def takeRight(n: Int): List[A] = ???
   def collect(predicate: PartialFunction[A, A]): List[A] = ???
 // Factories
@@ -79,9 +75,9 @@ object Test extends App:
   println(reference.zipWithValue(10) == List((1, 10), (2, 10), (3, 10), (4, 10)))
   println(reference.length() == 4)
   println(reference.zipWithIndex == List((1, 0), (2, 1), (3, 2), (4, 3)))
-  // println(reference.partition(_ % 2 == 0) == (List(2, 4), List(1, 3)))
-  // println(reference.span(_ % 2 != 0) == (List(1), List(2, 3, 4)))
-  // println(reference.span(_ < 3) == (List(1, 2), List(3, 4)))
+  println(reference.partition(_ % 2 == 0) == (List(2, 4), List(1, 3)))
+  println(reference.span(_ % 2 != 0)) // == (List(1), List(2, 3, 4))
+  println(reference.span(_ < 3) == (List(1, 2), List(3, 4)))
   // println(reference.reduce(_ + _) == 10)
   // println(List(10).reduce(_ + _) == 10)
   // println(reference.takeRight(3) == List(2, 3, 4))
