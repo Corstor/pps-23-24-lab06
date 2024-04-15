@@ -53,7 +53,20 @@ enum List[A]:
 
   def partition(predicate: A => Boolean): (List[A], List[A]) = foldRight((Nil(), Nil()))((a, list) => if predicate(a) then (a :: list._1, list._2) else (list._1, a :: list._2))
 
-  def span(predicate: A => Boolean): (List[A], List[A]) = ???
+  private def reverse(listTuble : (List[A], List[A])): (List[A], List[A]) = (listTuble._1.reverse, listTuble._2.reverse)
+
+  def reverse : List[A] = foldLeft(Nil())((a, b) => b :: a)
+
+  def span(predicate: A => Boolean): (List[A], List[A]) = 
+    var splitPointNotFound = true
+    reverse(
+      foldLeft((Nil(), Nil())) ((list, a) => if predicate(a) && splitPointNotFound then
+        (a :: list._1, list._2)
+       else
+        splitPointNotFound = false
+        (list._1, a :: list._2)
+      )
+    )
 
   def takeRight(n: Int): List[A] = ???
   def collect(predicate: PartialFunction[A, A]): List[A] = ???
@@ -76,7 +89,7 @@ object Test extends App:
   println(reference.length() == 4)
   println(reference.zipWithIndex == List((1, 0), (2, 1), (3, 2), (4, 3)))
   println(reference.partition(_ % 2 == 0) == (List(2, 4), List(1, 3)))
-  println(reference.span(_ % 2 != 0)) // == (List(1), List(2, 3, 4))
+  println(reference.span(_ % 2 != 0) == (List(1), List(2, 3, 4)))
   println(reference.span(_ < 3) == (List(1, 2), List(3, 4)))
   // println(reference.reduce(_ + _) == 10)
   // println(List(10).reduce(_ + _) == 10)
