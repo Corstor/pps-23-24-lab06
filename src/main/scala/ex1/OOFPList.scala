@@ -51,7 +51,7 @@ enum List[A]:
 
   def zipWithIndex: List[(A, Int)] = foldRight((Nil[(A, Int)](), this.length() - 1)) ((a, b) => ((a, b._2) :: b._1, b._2 - 1))._1
 
-  def partition(predicate: A => Boolean): (List[A], List[A]) = foldRight((Nil(), Nil()))((a, list) => if predicate(a) then (a :: list._1, list._2) else (list._1, a :: list._2))
+  def partition(predicate: A => Boolean): (List[A], List[A]) = foldRight((Nil(), Nil()))((elem, list) => if predicate(elem) then (elem :: list._1, list._2) else (list._1, elem :: list._2))
 
   private def reverse(listTuble : (List[A], List[A])): (List[A], List[A]) = (listTuble._1.reverse, listTuble._2.reverse)
 
@@ -60,16 +60,25 @@ enum List[A]:
   def span(predicate: A => Boolean): (List[A], List[A]) = 
     var splitPointNotFound = true
     reverse(
-      foldLeft((Nil(), Nil())) ((list, a) => if predicate(a) && splitPointNotFound then
-        (a :: list._1, list._2)
+      foldLeft((Nil(), Nil())) ((list, elem) => if predicate(elem) && splitPointNotFound then
+        (elem :: list._1, list._2)
        else
         splitPointNotFound = false
-        (list._1, a :: list._2)
+        (list._1, elem :: list._2)
       )
     )
 
-  def takeRight(n: Int): List[A] = ???
-  def collect(predicate: PartialFunction[A, A]): List[A] = ???
+  def takeRight(n: Int): List[A] =
+    var index = n
+    foldRight(Nil())((elem, list) => if index > 0 then
+        index = index - 1
+        elem :: list
+      else
+        list
+    )
+
+  def collect(predicate: PartialFunction[A, A]): List[A] = foldRight(Nil())((elem, list) => if (predicate.isDefinedAt(elem)) then predicate(elem) :: list else list)
+
 // Factories
 object List:
 
@@ -91,7 +100,7 @@ object Test extends App:
   println(reference.partition(_ % 2 == 0) == (List(2, 4), List(1, 3)))
   println(reference.span(_ % 2 != 0) == (List(1), List(2, 3, 4)))
   println(reference.span(_ < 3) == (List(1, 2), List(3, 4)))
-  // println(reference.reduce(_ + _) == 10)
-  // println(List(10).reduce(_ + _) == 10)
-  // println(reference.takeRight(3) == List(2, 3, 4))
-  // println(reference.collect { case x if x % 2 == 0 => x + 1 } == List(3, 5))
+  println(reference.reduce(_ + _) == 10)
+  println(List(10).reduce(_ + _) == 10)
+  println(reference.takeRight(3) == List(2, 3, 4))
+  println(reference.collect { case x if x % 2 == 0 => x + 1 } == List(3, 5))
