@@ -22,9 +22,7 @@ object ManagementApplication:
     object ConferenceReviewing:
         private class ConferenceReviewingImpl extends ConferenceReviewing:
             import Question.*
-            import PrivateMethods.*
-
-            private var reviews: List[(Int, Map[Question, Int])] = List()
+            import PrivateMethodsAndFields.*
 
             override def acceptedArticles: Set[Int] = reviews.map(_._1).distinct.filter(accepted).toSet
 
@@ -36,7 +34,7 @@ object ManagementApplication:
             override def averageWeightedFinalScoreMap: Map[Int, Double] = reviews
                 .map(_._1)
                 .distinct
-                .map((article: Int) => (article, averageWeightedFinalScore(article)))
+                .map(e => (e, averageWeightedFinalScore(e)))
                 .toMap
 
             override def loadReview(article: Int, relevance: Int, significance: Int, confidence: Int, fin: Int): Unit = 
@@ -64,7 +62,9 @@ object ManagementApplication:
                 
                 mean(scores)
 
-            private object PrivateMethods:
+            private object PrivateMethodsAndFields:
+                var reviews: List[(Int, Map[Question, Int])] = List()
+
                 def accepted(article: Int): Boolean = averageFinalScore(article) > 5.0 &&
                     reviews
                     .filter(_._1 == article)
