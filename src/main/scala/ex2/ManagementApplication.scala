@@ -22,30 +22,16 @@ object ManagementApplication:
     object ConferenceReviewing:
         private class ConferenceReviewingImpl extends ConferenceReviewing:
             import Question.*
+            import PrivateMethods.*
 
             private var reviews: List[(Int, Map[Question, Int])] = List()
 
-            private def accepted(article: Int): Boolean = averageFinalScore(article) > 5.0 &&
-                reviews
-                .filter(_._1 == article)
-                .map(_._2)
-                .map(_.toSet)
-                .flatMap(_.toStream)
-                .exists(e => e._1 == RELEVANCE && e._2 >= 8)
-
-            def acceptedArticles: Set[Int] = reviews.map(_._1).distinct.filter(this.accepted).toSet
+            override def acceptedArticles: Set[Int] = reviews.map(_._1).distinct.filter(accepted).toSet
 
             override def sortedAcceptedArticles: List[(Int, Double)] = this.acceptedArticles
                 .toList
                 .map(e => (e, this.averageFinalScore(e)))
                 .sorted((e1, e2) => e1._2.compareTo(e2._2))
-
-            private def averageWeightedFinalScore(article: Int): Double = 
-                val scores = reviews
-                    .filter(_._1 == article)
-                    .map(p => p._2(FINAL) * p._2(CONFIDENCE) / 10.0)
-
-                scores.sum.toDouble / scores.size
 
             override def averageWeightedFinalScoreMap: Map[Int, Double] = reviews
                 .map(_._1)
@@ -71,11 +57,30 @@ object ManagementApplication:
                 .map(_._2(question))
                 .sorted
 
-            def averageFinalScore(article: Int): Double =
+            override def averageFinalScore(article: Int): Double =
                 val scores = reviews
                     .filter(_._1 == article)
-                    .map(_._2(FINAL))
+                    .map(_._2(FINAL).toDouble)
                 
-                scores.sum.toDouble / scores.size
+                mean(scores)
+
+            private object PrivateMethods:
+                def accepted(article: Int): Boolean = averageFinalScore(article) > 5.0 &&
+                    reviews
+                    .filter(_._1 == article)
+                    .map(_._2)
+                    .map(_.toSet)
+                    .flatMap(_.toStream)
+                    .exists(e => e._1 == RELEVANCE && e._2 >= 8)
+
+                def averageWeightedFinalScore(article: Int): Double = 
+                    val scores = reviews
+                        .filter(_._1 == article)
+                        .map(p => p._2(FINAL) * p._2(CONFIDENCE) / 10.0)
+
+                    mean(scores)
+
+                def mean(list: List[Double]): Double =
+                    list.sum / list.size
 
         def apply(): ConferenceReviewing = ConferenceReviewingImpl()
